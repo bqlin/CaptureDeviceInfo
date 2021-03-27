@@ -5,28 +5,48 @@
 
 import Foundation
 
-class InfoOption {
+class InfoOption: InfoOptionRepresentable, Hashable {
+    var hasNext: Bool {
+        nextPageInfoBuilder != nil
+    }
+    
     var title: String
     var detail: String?
     
     typealias NextPageInfoBuilder = () -> PageInfo
     var nextPageInfoBuilder: NextPageInfoBuilder?
     
-    init(title: String, detail: String? = nil, nextInfosBuilder: NextPageInfoBuilder? = nil) {
+    init(title: String, detail: Displayable? = nil, nextInfosBuilder: NextPageInfoBuilder? = nil) {
         self.title = title
-        self.detail = detail
+        self.detail = detail?.displayText
         self.nextPageInfoBuilder = nextInfosBuilder
     }
     
-    init(title: String, detail: String? = nil) {
-        self.title = title
-        self.detail = detail
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(detail)
+    }
+    
+    static func ==(lhs: InfoOption, rhs: InfoOption) -> Bool {
+        if lhs === rhs {
+            return true
+        }
+        if type(of: lhs) != type(of: rhs) {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.detail != rhs.detail {
+            return false
+        }
+        return true
     }
 }
 
 class InfoOptionSection {
     let title: String
-    let options: [InfoOption]
+    var options: [InfoOption]
     
     init(title: String, options: [InfoOption]) {
         self.title = title
@@ -37,9 +57,12 @@ class InfoOptionSection {
 class PageInfo {
     var title: String
     var sections: [InfoOptionSection]
+    typealias SectionIndexTitlesMap = ([InfoOptionSection]) -> [String]
+    var sectionIndexTitlesMap: SectionIndexTitlesMap?
     
-    init(title: String, sections: [InfoOptionSection]) {
+    init(title: String, sections: [InfoOptionSection], sectionIndexTitlesMap: SectionIndexTitlesMap? = nil) {
         self.title = title
         self.sections = sections
+        self.sectionIndexTitlesMap = sectionIndexTitlesMap
     }
 }

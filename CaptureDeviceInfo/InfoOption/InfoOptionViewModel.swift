@@ -7,50 +7,56 @@ import UIKit
 
 protocol InfoOptionViewModelDelegate: class {
     func viewModel(_ viewModel: InfoOptionViewModel, didSelectRow item: InfoOption)
+    func viewModelDataDidLoad(_ viewModel: InfoOptionViewModel)
 }
 
 class InfoOptionViewModel: NSObject {
-    var info: InfoOption!
-    var sections = [InfoOptionSection]()
-    var title = ""
+    var formInfo: InfoOption!
+    var pageInfo: PageInfo!
     weak var delegate: InfoOptionViewModelDelegate?
     
     func setupData() {
-        guard let builder = info.nextPageInfoBuilder, let current: PageInfo = builder() else {
+        guard let builder = formInfo.nextPageInfoBuilder else {
             return
         }
+        pageInfo = builder()
         
-        sections = current.sections
-        title = current.title
+        delegate?.viewModelDataDidLoad(self)
     }
 }
 
 extension InfoOptionViewModel: UITableViewDataSource {
-    public func numberOfSections(in tableView: UITableView) -> Int { sections.count }
+    public func numberOfSections(in tableView: UITableView) -> Int { pageInfo.sections.count }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].options.count
+        pageInfo.sections[section].options.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: InfoOptionCell.reuseId, for: indexPath) as! InfoOptionCell
-        let info = sections[indexPath.section].options[indexPath.row]
-        cell.textLabel?.text = info.title
-        cell.detailTextLabel?.text = info.detail
-        cell.accessoryType = info.nextPageInfoBuilder == nil ? .none : .disclosureIndicator
+        let info = pageInfo.sections[indexPath.section].options[indexPath.row]
+        cell.setup(representable: info)
         
         return cell
     }
     
     public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let sectionItem = sections[section]
+        let sectionItem = pageInfo.sections[section]
         return sectionItem.title
+    }
+    
+    public func sectionIndexTitles(for tableView: UITableView) -> [String]? {
+        guard let titleMap = pageInfo.sectionIndexTitlesMap else {
+            return nil
+        }
+        
+        return titleMap(pageInfo.sections)
     }
 }
 
 extension InfoOptionViewModel: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let info = sections[indexPath.section].options[indexPath.row]
+        let info = pageInfo.sections[indexPath.section].options[indexPath.row]
         guard info.nextPageInfoBuilder != nil else {
             tableView.deselectRow(at: indexPath, animated: true)
             return

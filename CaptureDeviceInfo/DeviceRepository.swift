@@ -32,23 +32,43 @@ class DeviceRepository {
     static func allMediaTypes(device: AVCaptureDevice) -> [AVMediaType] {
         var types = [AVMediaType]()
         
-        func addMediaTypeIfSupport(_ type: AVMediaType) {
+        func addIfSupport(_ type: AVMediaType) {
             if device.hasMediaType(type) {
                 types.append(type)
             }
         }
-        addMediaTypeIfSupport(.audio)
-        addMediaTypeIfSupport(.closedCaption)
-        addMediaTypeIfSupport(.depthData)
-        addMediaTypeIfSupport(.metadata)
-        addMediaTypeIfSupport(.metadataObject)
-        addMediaTypeIfSupport(.muxed)
-        addMediaTypeIfSupport(.subtitle)
-        addMediaTypeIfSupport(.text)
-        addMediaTypeIfSupport(.timecode)
-        addMediaTypeIfSupport(.video)
+        addIfSupport(.audio)
+        addIfSupport(.closedCaption)
+        addIfSupport(.depthData)
+        addIfSupport(.metadata)
+        addIfSupport(.metadataObject)
+        addIfSupport(.muxed)
+        addIfSupport(.subtitle)
+        addIfSupport(.text)
+        addIfSupport(.timecode)
+        addIfSupport(.video)
         
         return types
     }
     
+    static func allVideoStabilizationMode(format: AVCaptureDevice.Format) -> [AVCaptureVideoStabilizationMode] {
+        var modes = [AVCaptureVideoStabilizationMode]()
+    
+        func addIfSupport(_ mode: AVCaptureVideoStabilizationMode) {
+            if format.isVideoStabilizationModeSupported(mode) {
+                modes.append(mode)
+            }
+        }
+        addIfSupport(.auto)
+        addIfSupport(.standard)
+        addIfSupport(.cinematic)
+        if #available(iOS 13.0, *) {
+            addIfSupport(.cinematicExtended)
+        } else {
+            // Fallback on earlier versions
+        }
+        addIfSupport(.off)
+        
+        return modes
+    }
 }

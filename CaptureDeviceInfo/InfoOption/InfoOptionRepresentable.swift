@@ -7,7 +7,7 @@ import Foundation
 
 protocol InfoOptionRepresentable {
     var title: String { get }
-    var detail: String { get }
+    var detail: String? { get }
     
-    var next: [InfoOptionRepresentable]? {get}
+    var hasNext: Bool {get}
 }

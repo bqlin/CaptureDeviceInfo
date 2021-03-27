@@ -14,7 +14,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        dump(AVCaptureDevice.devices(), name: "AVCaptureDevice.devices")
+        // dump(AVCaptureDevice.devices(), name: "AVCaptureDevice.devices")
         // print("类名：\(InfoOptionCell.reuseId)")
         
         var deviceTypes: [AVCaptureDevice.DeviceType] = [
@@ -36,12 +36,14 @@ class ViewController: UIViewController {
         }
         let session = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified)
         // dump(session.devices, name: "discovery device")
-        session.devices.forEach { device in
-            print("device: \(device), mediaTypes: \(DeviceRepository.allMediaTypes(device: device).map { $0.displayName })")
-        }
+        
+        // session.devices.forEach { device in
+        //     print("device: \(device), mediaTypes: \(DeviceRepository.allMediaTypes(device: device).map { $0.displayName })")
+        // }
+        
         // if #available(iOS 13.0, *) {
         //     dump(session.supportedMultiCamDeviceSets, name: "supportedMultiCamDeviceSets")
-        // } else {
+        // } else {15
         //     // Fallback on earlier versions
         // }
         
@@ -54,7 +56,7 @@ class ViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) { super.viewDidAppear(animated)
         let factory = DeviceInfoFactory.default
-        infoViewController.viewModel.info = InfoOption(title: "First", nextInfosBuilder: factory.positionPageInfo)
+        infoViewController.viewModel.formInfo = InfoOption(title: "First", nextInfosBuilder: factory.positionPageInfo)
         navigationController?.pushViewController(infoViewController, animated: true)
     }
 }

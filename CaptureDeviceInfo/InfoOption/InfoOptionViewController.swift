@@ -24,9 +24,9 @@ class InfoOptionViewController: UIViewController {
         super.viewDidLoad()
         print(#function)
         
-        viewModel.setupData()
         viewModel.delegate = self
-        self.title = viewModel.title
+        viewModel.setupData()
+        self.title = viewModel.pageInfo.title
         infoOptionView.tableView.dataSource = viewModel
         infoOptionView.tableView.delegate = viewModel
     }
@@ -38,9 +38,13 @@ class InfoOptionViewController: UIViewController {
 }
 
 extension InfoOptionViewController: InfoOptionViewModelDelegate {
+    func viewModelDataDidLoad(_ viewModel: InfoOptionViewModel) {
+        infoOptionView.tableView.reloadData()
+    }
+    
     func viewModel(_ viewModel: InfoOptionViewModel, didSelectRow item: InfoOption) {
         let controller = InfoOptionViewController()
-        controller.viewModel.info = item
+        controller.viewModel.formInfo = item
     
         print(#function)
         navigationController?.pushViewController(controller, animated: true)

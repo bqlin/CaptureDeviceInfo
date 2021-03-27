@@ -19,6 +19,10 @@ class InfoOptionView: UIView {
     
     private func setupLayout() {
         addSubview(tableView)
+        tableView.contentInsetAdjustmentBehavior = .automatic
+        tableView.sectionHeaderHeight = 38
+        tableView.sectionIndexTrackingBackgroundColor = .cyan
+        tableView.rowHeight = UITableView.automaticDimension
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([

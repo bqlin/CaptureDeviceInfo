@@ -7,52 +7,130 @@ import Foundation
 import AVFoundation
 
 protocol Displayable {
-    var displayName: String { get }
+    var displayText: String { get }
+}
+
+// MARK: system
+
+extension String: Displayable {
+    var displayText: String { self }
+}
+
+extension Bool: Displayable {
+    var displayText: String {
+        self ? "✅" : "❎"
+    }
+}
+
+extension Array: Displayable {
+    var displayText: String {
+        var text = ""
+        guard count > 0 else {
+            return "[]"
+        }
+        
+        for e in self {
+            if let displayable = e as? Displayable {
+                text += "\(displayable.displayText)\n"
+            } else {
+                text += "\(e)\n"
+            }
+        }
+        text.removeLast()
+        return text
+    }
+}
+
+extension CMVideoDimensions: Displayable {
+    var displayText: String {
+        "\(width)×\(height)"
+    }
+}
+
+extension AVCaptureDevice.Format.AutoFocusSystem: Displayable {
+    var displayText: String {
+        var text = ""
+        switch self {
+            case .none:
+                text = "none"
+            case .contrastDetection:
+                text = "contrastDetection"
+            case .phaseDetection:
+                text = "phaseDetection"
+        }
+        return text
+    }
 }
 
 extension AVMediaType: Displayable {
-    var displayName: String {
-        var name = ""
+    var displayText: String {
+        var text = ""
         switch self {
             case .audio:
-                name = "audio media"
+                text = "audio media"
             case .closedCaption:
-                name = "closed-caption content"
+                text = "closed-caption content"
             case .depthData:
-                name = "depth data"
+                text = "depth data"
             case .metadata:
-                name = "metadata"
+                text = "metadata"
             case .metadataObject:
-                name = "metadata objects"
+                text = "metadata objects"
             case .muxed:
-                name = "muxed media"
+                text = "muxed media"
             case .subtitle:
-                name = "subtitles"
+                text = "subtitles"
             case .text:
-                name = "text"
+                text = "text"
             case .timecode:
-                name = "timecode"
+                text = "timecode"
             case .video:
-                name = "video"
+                text = "video"
             default:
-                name = self.rawValue
+                text = rawValue
         }
-        return name
+        return text
     }
 }
 
 extension AVCaptureDevice.Position: Displayable {
-    var displayName: String {
-        var name = ""
+    var displayText: String {
+        var text = ""
         switch self {
             case .front:
-                name = "front"
+                text = "front"
             case .back:
-                name = "back"
+                text = "back"
             case .unspecified:
-                name = "unspecified"
+                text = "unspecified"
         }
         
-        return name
+        return text
     }
+}
+
+extension AVCaptureVideoStabilizationMode: Displayable {
+    var displayText: String {
+        var text = ""
+        switch self {
+            case .off:
+                text = "off"
+            case .standard:
+                text = "standard"
+            case .cinematic:
+                text = "cinematic"
+            case .cinematicExtended:
+                text = "cinematicExtended"
+            case .auto:
+                text = "auto"
+        }
+        
+        return text
+    }
+}
+
+extension AVFrameRateRange: Displayable {
+var displayText: String {
+    "\(minFrameRate)~\(maxFrameRate)"
+}
 }

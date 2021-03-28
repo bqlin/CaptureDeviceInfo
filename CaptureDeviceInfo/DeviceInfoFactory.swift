@@ -45,14 +45,27 @@ class DeviceInfoFactory {
     
     func deviceDetailPageInfo(device: AVCaptureDevice) -> PageInfo {
         var sections = [InfoOptionSection]()
-        sections.append(buildBasicInfoSection(device: device))
-        sections.append(buildMediaTypeSection(device: device))
+        sections += [
+            buildBasicInfoSection(device: device),
+            buildMediaTypeSection(device: device),
+        ]
+        if (device.hasMediaType(.video)) {
+            sections += [
+                buildExposureSection(device: device),
+                buildDepthDataSection(device: device),
+                buildZoomSection(device: device),
+                buildFocusSection(device: device),
+                buildFlashSection(device: device),
+                buildTorchSection(device: device),
+                buildLowLightSection(device: device),
+            ]
+        }
         
         return PageInfo(title: device.localizedName, sections: sections)
     }
     
     func buildMediaTypeSection(device: AVCaptureDevice) -> InfoOptionSection {
-        var options = DeviceRepository.allMediaTypes(device: device).map { mediaType in
+        let options = DeviceRepository.allMediaTypes(device: device).map { mediaType in
             InfoOption(title: mediaType.displayText)
         }
         
@@ -61,16 +74,24 @@ class DeviceInfoFactory {
     
     func buildBasicInfoSection(device: AVCaptureDevice) -> InfoOptionSection {
         var options = [InfoOption]()
-        options.append(InfoOption(title: "unique ID", detail: device.uniqueID))
-        options.append(InfoOption(title: "model ID", detail: device.modelID))
-        options.append(InfoOption(title: "localizedName", detail: device.localizedName))
-        options.append(InfoOption(title: "device type", detail: device.deviceType.rawValue))
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        addOption("unique ID", device.uniqueID)
+        addOption("model ID", device.modelID)
+        addOption("localizedName", device.localizedName)
+        addOption("device type", device.deviceType)
         // TODO: constituentDevices
-        options.append(InfoOption(title: "lens diaphragm", detail: "\(device.lensAperture)"))
-        options.append(InfoOption(title: "formats", detail: "\(device.activeFormat)") {
-            self.buildFormatPage(device: device)
-        })
-        
+        addOption("lens diaphragm", "\(device.lensAperture)")
+        if (device.formats.count > 0) {
+            options.append(InfoOption(title: "formats") {
+                self.buildFormatPage(device: device)
+            })
+        }
+        addOption("active video frame duration", "\(device.activeVideoMinFrameDuration.seconds)~\(device.activeVideoMaxFrameDuration.seconds)")
+        addOption("WhiteBalanceModeSupported", DeviceRepository.allWhiteBalanceModeSupported(device: device))
+    
+    
         return InfoOptionSection(title: "Basic Info", options: options)
     }
     
@@ -92,8 +113,8 @@ class DeviceInfoFactory {
                 if merged && i == 0 {
                     return "c"
                 }
-                
-                var index = merged ? i - 1 : i
+    
+                let index = merged ? i - 1 : i
                 if activeIndex == index {
                     return "★"
                 }
@@ -104,12 +125,15 @@ class DeviceInfoFactory {
     }
     
     func mergeCommonSection(_ sections: inout [InfoOptionSection], merged: inout Bool) {
-        var commonSection = InfoOptionSection(title: "common", options: [])
+        let commonSection = InfoOptionSection(title: "common", options: [])
         var diffIndies = Set<Int>()
         
+        guard sections.count > 0, sections.first!.options.count > 0 else {
+            return
+        }
         let optionCount = sections.first!.options.count
         for i in 0 ..< optionCount {
-            var tmpOption = sections.first!.options[i]
+            let tmpOption = sections.first!.options[i]
             var diff = false
             
             for section in sections {
@@ -176,7 +200,131 @@ class DeviceInfoFactory {
             addOption("global tone mapping supported", false)
         }
         addOption("supported depth data formats", format.supportedDepthDataFormats)
+        if #available(iOS 12.0, *) {
+            addOption("portrait effects matte still image delivery supported", format.isPortraitEffectsMatteStillImageDeliverySupported)
+        } else {
+            // Fallback on earlier versions
+        }
+        addOption("video min zoom factor for depth data delivery", "\(format.videoMinZoomFactorForDepthDataDelivery)")
+        addOption("supported color spaces", format.supportedColorSpaces)
         
         return InfoOptionSection(title: title, options: options)
     }
+    
+    func buildExposureSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+        
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        
+        addOption("exposure duration", "\(device.exposureDuration.seconds)")
+        addOption("exposure target offset", "\(device.exposureTargetOffset)")
+        addOption("exposure target bias", "\(device.exposureTargetBias)")
+        addOption("exposure target bias range", "\(device.minExposureTargetBias)~\(device.maxExposureTargetBias)")
+        if #available(iOS 12.0, *) {
+            addOption("active max exposure duration", "\(device.activeMaxExposureDuration.seconds)")
+        } else {
+            // Fallback on earlier versions
+        }
+        addOption("exposure mode supported", DeviceRepository.allExposureMode(device: device))
+        addOption("exposure point of interest", "\(device.exposurePointOfInterest)")
+        addOption("is exposure point of interest supported", device.isExposurePointOfInterestSupported)
+        
+        return InfoOptionSection(title: "Exposure", options: options)
+    }
+    
+    func buildDepthDataSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+        
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+    
+        let activeDepthDataFormat: Any = device.activeDepthDataFormat ?? []
+        addOption("active depth data format", "\(activeDepthDataFormat)")
+        if #available(iOS 12.0, *) {
+            addOption("active depth data min frame duration", "\(device.activeDepthDataMinFrameDuration.seconds)")
+        } else {
+            // Fallback on earlier versions
+        }
+        
+        return InfoOptionSection(title: "Depth Data", options: options)
+    }
+    
+    func buildZoomSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+        
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        
+        addOption("video zoom factor", "\(device.videoZoomFactor)")
+        addOption("video zoom factor range", "\(device.minAvailableVideoZoomFactor)~\(device.maxAvailableVideoZoomFactor)")
+        if #available(iOS 13.0, *) {
+            addOption("virtual device switch over video zoom factors", device.virtualDeviceSwitchOverVideoZoomFactors)
+        } else {
+            // Fallback on earlier versions
+        }
+        
+        return InfoOptionSection(title: "Zoom", options: options)
+    }
+    
+    func buildFocusSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+        
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        
+        addOption("focus mode supported", DeviceRepository.allFocusModeSupported(device: device))
+        addOption("focus point of interest", "\(device.focusPointOfInterest)")
+        addOption("focus point of interest supported", device.isFocusPointOfInterestSupported)
+        addOption("smooth auto focus enabled", device.isSmoothAutoFocusEnabled)
+        addOption("Smooth Auto Focus Supported", device.isSmoothAutoFocusSupported)
+        addOption("auto focus range restriction", device.autoFocusRangeRestriction)
+        
+        return InfoOptionSection(title: "Focus", options: options)
+    }
+    
+    func buildFlashSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+    
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        addOption("has flash", device.hasFlash)
+        addOption("flash available", device.isFlashAvailable)
+        addOption("flash mode supported", DeviceRepository.allFlashModeSupported(device: device))
+    
+        return InfoOptionSection(title: "Flash", options: options)
+    }
+    
+    func buildTorchSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+    
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        addOption("has torch", device.hasTorch)
+        addOption("torch available", device.isTorchAvailable)
+        addOption("torch level", "\(device.torchLevel)")
+        addOption("max available torch level", "\(AVCaptureDevice.maxAvailableTorchLevel)")
+        addOption("torch mode supported", DeviceRepository.allTorchModeSupported(device: device))
+    
+        return InfoOptionSection(title: "Torch", options: options)
+    }
+    
+    func buildLowLightSection(device: AVCaptureDevice) -> InfoOptionSection {
+        var options = [InfoOption]()
+    
+        func addOption(_ title: String, _ detail: Displayable? = nil) {
+            options.append(InfoOption(title: title, detail: detail))
+        }
+        addOption("low light boost supported", device.isLowLightBoostSupported)
+        addOption("automatically enables low light boost when available", device.automaticallyEnablesLowLightBoostWhenAvailable)
+    
+        return InfoOptionSection(title: "Low Light", options: options)
+    }
+    
 }

@@ -34,7 +34,7 @@ class ViewController: UIViewController {
         } else {
             // Fallback on earlier versions
         }
-        let session = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified)
+        // let session = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified)
         // dump(session.devices, name: "discovery device")
         
         // session.devices.forEach { device in

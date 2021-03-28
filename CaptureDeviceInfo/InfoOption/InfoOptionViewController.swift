@@ -22,13 +22,21 @@ class InfoOptionViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(#function)
         
         viewModel.delegate = self
         viewModel.setupData()
         self.title = viewModel.pageInfo.title
         infoOptionView.tableView.dataSource = viewModel
         infoOptionView.tableView.delegate = viewModel
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let indexPaths = infoOptionView.tableView.indexPathsForSelectedRows {
+            indexPaths.forEach { indexPath in
+                infoOptionView.tableView.deselectRow(at: indexPath, animated: true)
+            }
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -45,8 +53,7 @@ extension InfoOptionViewController: InfoOptionViewModelDelegate {
     func viewModel(_ viewModel: InfoOptionViewModel, didSelectRow item: InfoOption) {
         let controller = InfoOptionViewController()
         controller.viewModel.formInfo = item
-    
-        print(#function)
+        
         navigationController?.pushViewController(controller, animated: true)
     }
 }

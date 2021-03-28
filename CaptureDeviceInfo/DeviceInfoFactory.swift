@@ -82,14 +82,17 @@ class DeviceInfoFactory {
         addOption("localizedName", device.localizedName)
         addOption("device type", device.deviceType)
         // TODO: constituentDevices
+        
+        if device.hasMediaType(.video) {
         addOption("lens diaphragm", "\(device.lensAperture)")
-        if (device.formats.count > 0) {
-            options.append(InfoOption(title: "formats") {
-                self.buildFormatPage(device: device)
-            })
+            if (device.formats.count > 0) {
+                options.append(InfoOption(title: "formats") {
+                    self.buildFormatPage(device: device)
+                })
+            }
+            addOption("active video frame duration", "\(device.activeVideoMinFrameDuration.seconds)~\(device.activeVideoMaxFrameDuration.seconds)")
+            addOption("white balance mode supported", DeviceRepository.allWhiteBalanceModeSupported(device: device))
         }
-        addOption("active video frame duration", "\(device.activeVideoMinFrameDuration.seconds)~\(device.activeVideoMaxFrameDuration.seconds)")
-        addOption("WhiteBalanceModeSupported", DeviceRepository.allWhiteBalanceModeSupported(device: device))
     
     
         return InfoOptionSection(title: "Basic Info", options: options)
